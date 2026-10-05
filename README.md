@@ -1,188 +1,128 @@
-
 <div align="center">
 
-```text
- ┌──────────────────────────────────────────────────────────────┐
- │  █████  ██    ██ ████████  ██████  ███    ███  █████  ████████   │
- │ ██   ██ ██    ██    ██    ██    ██ ████  ████ ██   ██    ██      │
- │ ███████ ██    ██    ██    ██    ██ ██ ████ ██ ███████    ██      │
- │ ██   ██ ██    ██    ██    ██    ██ ██  ██  ██ ██   ██    ██      │
- │ ██   ██  ██████     ██     ██████  ██      ██ ██   ██    ██      │
- └──────────────────────────────────────────────────────────────┘
- [   INFRASTRUCTURE AUTOMATION  •  LIGHTWEIGHT SYSTEMS TOOLKITS   ]
-```
+# Automations_Bash
 
-### ⚙️ **Architecture:** `AutoMations` | 🛡️ **Code Quality:** `ShellCheck Verified` | 📜 **License:** [`MIT`](./LICENSE)
+**Small Bash and Python toolkits for the repetitive parts of running a server estate.**
 
-A high-performance collection of modular Bash and Python toolkits engineered to automate daily server operations, orchestrate infrastructure routines, and gather sub-millisecond diagnostics safely.
-
-📌 **Project Suite URL:** [Automations_Bash on GitHub](https://github.com)
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](./LICENSE)
 
 </div>
 
 ---
 
-## 🔍 Navigation Core
-* [📂 Automation Suite Health Matrix](#-automation-suite-health-matrix)
-* [🧠 System Architecture Flow](#-system-architecture-flow)
-* [⚡ Core Engineering Specs](#-core-engineering-specs)
-* [📖 Active Toolkits & Code Blueprints](#-active-toolkits--code-blueprints)
-* [📅 Upcoming Automation Pipeline (To-Do)](#-upcoming-automation-pipeline-to-do)
-* [⚙️ Production Deployment Guide](#%EF%B8%8F-production-deployment-guide)
+## Why this exists
+
+Most of what an administrator does in a week is not administration, it is the
+same twenty commands copied again. This repository is where I keep the ones
+worth reusing, so they are written once, kept readable, and tested before they
+touch anything that matters.
+
+Everything here is deliberately small and dependency-free. If a script needs a
+package install to run, it does not belong here.
+
+## Status
+
+I am not going to pad this with a roadmap. Here is exactly what is in the
+repository right now:
+
+| Module | Status | What it does |
+| :--- | :--- | :--- |
+| [`whoami/`](./whoami) | Working | System and network diagnostics in one pass |
+
+That is the whole suite at the moment. If I add more modules they will be listed
+in this table as they land, not before.
 
 ---
 
-## 📂 Automation Suite Health Matrix
+## `whoami` — System Monitor and Information Script
 
-> [!NOTE]
-> Each automation toolkit is self-contained within its own dedicated directory for modular deployment.
+A single-pass Bash script that prints the state of the machine and its network
+position, colour-coded, in one screen. Useful as a first command when picking up
+an unfamiliar server, and as a quick sanity check before and after a change.
 
+### What it reports
 
+| Section | Detail |
+| :--- | :--- |
+| **Welcome** | Current user, and flags when running as `root` |
+| **System** | OS name, shell, uptime, current date and time |
+| **Resources** | RAM consumption, disk usage on `/` with a warning above 90% |
+| **Network** | Local IP, loopback IP, and public IP |
+| **Ports** | Count of listening TCP/UDP sockets |
 
-| Toolkit Module | Current Status | Verification | Core Target Function |
-| :--- | :--- | :--- | :--- |
-| 📊 **[`whoami/`](./whoami)** | 🟢 `Production-Ready` | `ShellCheck Certified` | Live CPU, Memory, Disk, and Network Diagnostics |
-| 🧹 **`log_rotator/`** | 🟡 `Beta Testing` | `Pending CI` | Log archiving and safe memory cache flushing |
-| ☁️ **`sec_backup/`** | 🔴 `Planned (Q2)` | `Design Phase` | Encrypted automated database & site streaming |
-| 🔒 **`access_audit/`**| 🔴 `Planned (Q2)` | `Design Phase` | Failed SSH attempt parsing & system hardening |
+That is ten distinct values across the five sections.
 
----
+### Requirements
 
-## 🧠 System Architecture Flow
+Bash, plus the utilities it calls. All are standard on any mainstream Linux
+distribution.
 
-Every module inside this suite runs on a strict **Pre-Flight Execution Matrix** to protect active production kernels:
+- `coreutils` — `free`, `df`, `date`, `uptime`
+- `iproute2` — `ip`, `ss`
+- `curl` — optional, only for the public IP lookup. Without it the script prints
+  `Offline` for that one line and carries on.
+- Running as `root` lets `ss` resolve process names against the listening ports.
+  Without it you still get the count, just not the owning process.
 
-```text
-  [Trigger Script]
-         │
-         ▼
- 🛡️ [Security Check] ─── (Fails) ───> 🛑 [Graceful Terminate & Log Error]
-         │
-         ├─► (Verifies Root/Sudo Privileges)
-         └─► (Validates CLI Dependencies: curl, ss, df)
-         │
-         ▼ (Passes)
- 📊 [Execute Module Core] ───> 💾 [Output JSON String / Status Logs]
-```
-
-> [!TIP]
-> This modular structure allows you to clone the repository and pluck out only the specific sub-folders (like `whoami/`) you need for your server nodes without dragging unnecessary dependencies.
-
----
-
-## ⚡ Core Engineering Specs
-
-To ensure these tools can be deployed on critical enterprise servers, every script is bound to strict performance criteria:
-* ⏱️ **Sub-Second Execution:** Execution runtime must remain under `500ms`.
-* ⚙️ **Zero Dependency:** Zero external packages required; scripts rely strictly on native Unix core utilities.
-* 💾 **Zero-Footprint Memory:** Efficient background pipeline processing with zero CPU/RAM bloat.
-
----
-
-## 📖 Active Toolkits & Code Blueprints
-
-Click on the arrow below to view the verified execution blueprint currently driving the engine:
-
-<details>
-<summary>📊 <b>whoami/ | Infrastructure Diagnostics Engine</b></summary>
+### Install and run
 
 ```bash
-#!/bin/bash
-# High-frequency metrics parsing used inside the production environment
-
-echo "=== INFRASTRUCTURE PERFORMANCE STATS ==="
-# 1. Capture CPU Idle states and dynamic Memory load
-top -bn1 | grep "Cpu(s)" | awk '{print "CPU Load: " 100-\$8 "%"}'
-free -h | awk '/Mem:/ {print "RAM Memory: " \$3 "/" \$2}'
-
-# 2. Inspect storage partition capacity safely
-df -h --total | awk '/total/ {print "Disk Space Utilized: " \$5}'
-
-# 3. Stream active established network sockets
-ss -tunla | grep "ESTAB" | wc -l | awk '{print "Active TCP/UDP Sockets: " \$1}'
-```
-</details>
-
----
-
-## 📅 Upcoming Automation Pipeline (To-Do)
-
-Click on any future system daemon arrow to preview its upcoming architectural syntax framework:
-
-<details>
-<summary>🧹 <b>Log Rotator & Cache Cleaner Framework</b></summary>
-
-```bash
-# Target: Purge logs older than 7 days and drop system pagecaches safely
-LOG_DIR="/var/log/myapp"
-find "\$LOG_DIR" -type f -name "*.log" -mtime +7 -exec tar -czvf {}.tar.gz {} \;
-sync && echo 3 > /proc/sys/vm/drop_caches
-```
-</details>
-
-<details>
-<summary>☁️ <b>Encrypted Automated Backup Daemon</b></summary>
-
-```bash
-# Target: Compress critical source directories and securely stream to backup nodes
-BACKUP_SRC="/var/www/html"
-BACKUP_DES="/backup/\$(date +%F).tar.gz"
-tar -czf "\$BACKUP_DES" "\$BACKUP_SRC"
-scp "\$BACKUP_DES" sysadmin@backup_node:/remote/vault/
-```
-</details>
-
-<details>
-<summary>🔒 <b>SSH Security Auditing System</b></summary>
-
-```bash
-# Target: Scrape authentication logs to isolate malicious brute-force IP entries
-echo "=== MALICIOUS IP TARGETS DETECTED ==="
-grep "Failed password" /var/log/auth.log | awk '{print \$11}' | sort | uniq -c
-```
-</details>
-
----
-
-## ⚙️ Production Deployment Guide
-
-> [!IMPORTANT]
-> Always verify automation scripts within isolated staging servers or testing sandboxes before integrating them into production environments.
-
-To deploy the suite and initialize the diagnostic engine, run the following sequence:
-
-```bash
-# 1. Clone the master automation suite repository
-git clone https://github.com.git
-
-# 2. Move into the production module partition
+git clone https://github.com/omargablx02/Automations_Bash.git
 cd Automations_Bash/whoami
-
-# 3. Apply secure executable system bits
-chmod +x whoami
-
-# 4. Trigger the monitoring diagnostics
-./whoami
+chmod +x whoami.sh
+./whoami.sh
 ```
 
+You can also copy just the `whoami/` folder onto a server on its own. It has no
+dependency on anything else in the repository.
+
+### Example output
+
+```
+--------------------------------------------------
+                  Welcome , omar!
+--------------------------------------------------
+[+] System Info:
+  - OS:         Ubuntu
+  - Shell:      /bin/bash
+  - Uptime:     4 days, 7 hours
+  - Date:       2026-10-05 | 05:12:44 PM
+[+] Resources Profile:
+  - RAM Usage:  23.4%
+  - Disk Used:  41%
+  - Open Ports: 12
+[+] Network Profile:
+  - Local IP:   192.168.1.24/24
+  - Loopback:   127.0.0.1/8
+  - Public IP:  197.x.x.x
+--------------------------------------------------
+```
+
+![whoami screenshot](./whoami/whoami_script.PNG)
+
+### A note on the public IP lookup
+
+The script calls `ifconfig.me` to resolve the public IP, with a two second
+timeout. That is one outbound HTTP request to a third party. On a server with
+strict egress rules, or anywhere you do not want the request at all, remove or
+comment out that line. Nothing else depends on it.
+
 ---
 
-## 🤝 Contribution Protocol
+## Contributing
 
-1. Fork the Project.
-2. Spin up your isolated Feature Branch (`git checkout -b feature/AmazingAutomation`).
-3. Save, test, and commit your changes (`git commit -m 'Add AmazingAutomation'`).
-4. Push your secure branch (`git push origin feature/AmazingAutomation`).
-5. Open an official **Pull Request**.
+Issues and pull requests are welcome. Two ground rules:
 
----
+1. Test on a machine you can afford to break first.
+2. Keep it dependency-free, and keep the output readable by a human who has
+   never seen your scripts before.
 
-## 📱 Connect With Me
+## Connect with me
 
-* **GitHub:** [@crypt1cx01](https://github.com)
+- **GitHub:** [@omargablx02](https://github.com/omargablx02)
+- **LinkedIn:** [in/omar-gablx02](https://www.linkedin.com/in/omar-gablx02)
+- **Portfolio:** [omargablx02.github.io/portfolio](https://omargablx02.github.io/portfolio/)
 
----
+## License
 
-## 📜 License
-
-This automation suite is officially licensed and distributed under the **MIT Open-Source License** - see the [LICENSE](./LICENSE) document for more details.
+MIT. See [LICENSE](./LICENSE).
